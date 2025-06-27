@@ -1,15 +1,18 @@
 import { Header } from "../components/header"
 import { Sidebar } from "../components/sidebar"
-import { MainContent } from "../components/main-content"
+import { DynamicContent } from "../components/dynamic-content"
+import { NavigationProvider } from "../contexts/navigation-context"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MainContent />
+    <NavigationProvider>
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <DynamicContent />
+        </div>
       </div>
-    </div>
+    </NavigationProvider>
   )
 }
