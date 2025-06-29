@@ -1,36 +1,42 @@
 "use client";
 import { useState } from "react";
+import { authService } from "@/api/login/auth";
 
 export default function HomePage() {
   const [nombre, setNombre] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
 
     if (!nombre.trim()) {
-      alert("Por favor ingresa un nombre.");
+      setError("Por favor ingresa un nombre.");
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const res = await fetch(`http://localhost:8080/usuarios/login/${nombre}`, {
-        method: "GET",
-      });
+      const result = await authService.login(nombre);
 
-      if (!res.ok) {
-        alert("El usuario no existe.");
-        return;
+      if (result.success && result.user) {
+        console.log("Usuario logueado:", result.user);
+        
+        // Guardar datos del usuario
+        authService.saveUserData(result.user);
+        
+        // Redirigir al dashboard
+        alert(`¡Bienvenido ${result.user.nombre}!`);
+        // router.push("/dashboard");
+      } else {
+        setError(result.message || "Error al iniciar sesión");
       }
-
-      const data = await res.json();
-      console.log("Usuario logueado:", data);
-
-      // Puedes guardar los datos del usuario o redirigirlo
-      // localStorage.setItem("usuario", JSON.stringify(data));
-      // router.push("/dashboard");
     } catch (error) {
-      console.error("Error de red:", error);
-      alert("No se pudo conectar al servidor.");
+      setError("Error inesperado. Intenta de nuevo.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -38,6 +44,13 @@ export default function HomePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
         <h1 className="text-2xl font-semibold mb-4">Iniciar sesión</h1>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
@@ -51,9 +64,10 @@ export default function HomePage() {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
-            Iniciar sesión
+            {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
           </button>
           <p className="text-sm text-gray-500">
             ¿No tienes cuenta?{" "}
