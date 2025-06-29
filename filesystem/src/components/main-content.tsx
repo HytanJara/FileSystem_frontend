@@ -8,6 +8,7 @@ import { fileService } from "@/api/upload/fileServices"
 import { crearCarpeta } from "@/api/carpeta/folder"
 import { authService } from "@/api/login/auth";
 import { listarCarpetas } from "@/api/carpeta/folder"
+import { NewButton } from "@/components/new-button"
 
 
 
@@ -68,6 +69,7 @@ export function MainContent() {
             </Button>
           )}
         </div>
+        <NewButton currentPath={currentPath} />
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" className="text-gray-600">
             <List className="h-5 w-5" />
@@ -87,7 +89,7 @@ export function MainContent() {
             <HardDrive className="h-6 w-6 text-gray-600 mr-2" />
             <h1 className="text-2xl font-normal text-gray-800">Mi unidad</h1>
           </div>
-          <p className="text-gray-600">Ruta: {currentPath}</p>
+          <p className="text-gray-600">Ruta actual: {currentPath}</p>
         </div>
 
         {carpetas.length > 0 && (
@@ -98,8 +100,8 @@ export function MainContent() {
                 <FolderCard
                   key={`folder-${index}`}
                   name={carpeta.nombre}
+                  type="folder"
                   onClick={() => handleAbrirCarpeta(carpeta.nombre)}
-                  
                 />
               ))}
             </div>
@@ -112,10 +114,40 @@ export function MainContent() {
             {archivos.length > 0 ? (
               archivos.map((archivo, index) => (
                 <FolderCard
-                  key={`file-${index}`}
-                  name={`${archivo.nombre}.${archivo.extension}`}
-                  type="file"
-                />
+  key={`file-${index}`}
+  name={`${archivo.nombre}.${archivo.extension}`}
+  type="file"
+>
+  <Button
+    size="sm"
+    className="mt-2"
+    variant="destructive"
+    onClick={async (e) => {
+      e.stopPropagation(); // evita que se dispare onClick del FolderCard
+      const confirmar = window.confirm("¿Eliminar este archivo?");
+      if (!confirmar) return;
+
+      const res = await fileService.eliminarArchivo({
+        nombre: archivo.nombre,
+        extension: archivo.extension,
+        path: currentPath,
+      });
+
+      if (res.success) {
+        setArchivos((prev) =>
+          prev.filter(
+            (a) =>
+              !(a.nombre === archivo.nombre && a.extension === archivo.extension)
+          )
+        );
+      } else {
+        alert(res.message || "No se pudo eliminar");
+      }
+    }}
+  >
+    Eliminar
+  </Button>
+</FolderCard>
               ))
             ) : (
               <div className="col-span-full text-center py-12">

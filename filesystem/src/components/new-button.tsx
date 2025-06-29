@@ -14,8 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { fileService } from "@/api/upload/fileServices"
 
-export function NewButton() {
+export function NewButton({ currentPath }: { currentPath: string }) {
 
   
   const handleCreateFolder = async () => {
@@ -41,26 +42,43 @@ export function NewButton() {
   }
 
   const handleUploadFile = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
+    const input = document.createElement("input")
+    input.type = "file"
+    input.multiple = false
   
     input.onchange = async (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (files) {
-        for (const file of Array.from(files)) {
-          const result = await uploadService.uploadFile(file, "root");
-          if (result.success) {
-            alert(`✅ ${file.name} subido con éxito`);
+      const files = (e.target as HTMLInputElement).files
+      const user = authService.getUserData()
+  
+      if (files && user) {
+        const file = files[0]
+        const nombre = file.name.split(".")[0]
+        const extension = file.name.split(".").pop() || "txt"
+        const contenido = await file.text()
+  
+        try {
+          const res = await fileService.subirArchivo({
+            nombre,
+            extension,
+            contenido,
+            path: currentPath,
+          });
+  
+          if (res.success) {
+            alert(`✅ Archivo "${file.name}" subido correctamente`)
+            window.location.reload() // O usa un callback para refrescar estado
           } else {
-            alert(`❌ Error al subir ${file.name}: ${result.message}`);
+            alert(`❌ Error al subir archivo: ${res.message}`)
           }
+        } catch (error) {
+          alert(`❌ Error al subir archivo`)
+          console.error(error)
         }
       }
-    };
+    }
   
-    input.click();
-  };
+    input.click()
+  }
 
 
   
