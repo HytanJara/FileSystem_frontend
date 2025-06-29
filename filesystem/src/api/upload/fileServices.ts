@@ -87,6 +87,40 @@ export const fileService = {
   
     const data = await res.json();
     return { success: false, message: data?.error || "Error al eliminar archivo" };
+  },
+
+
+  async descargarArchivo({
+    nombre,
+    extension,
+    path,
+  }: {
+    nombre: string
+    extension: string
+    path: string
+  }) {
+    const usuario = authService.getUserData();
+    if (!usuario) throw new Error("Usuario no autenticado");
+  
+    const nombreArchivo = `${nombre}.${extension}`;
+    const url = getApiUrl(
+      `/usuarios/${usuario.nombre}/archivos/descargar?path=${path}&nombreArchivo=${nombreArchivo}`
+    );
+  
+    const res = await fetch(url);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error?.error || "No se pudo descargar el archivo");
+    }
+  
+    const blob = await res.blob();
+  
+    const enlace = document.createElement("a");
+    enlace.href = window.URL.createObjectURL(blob);
+    enlace.download = nombreArchivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
   }
 };
 

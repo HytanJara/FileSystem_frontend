@@ -114,40 +114,61 @@ export function MainContent() {
             {archivos.length > 0 ? (
               archivos.map((archivo, index) => (
                 <FolderCard
-  key={`file-${index}`}
-  name={`${archivo.nombre}.${archivo.extension}`}
-  type="file"
->
-  <Button
-    size="sm"
-    className="mt-2"
-    variant="destructive"
-    onClick={async (e) => {
-      e.stopPropagation(); // evita que se dispare onClick del FolderCard
-      const confirmar = window.confirm("¿Eliminar este archivo?");
-      if (!confirmar) return;
+                key={`file-${index}`}
+                name={`${archivo.nombre}.${archivo.extension}`}
+                type="file"
+              >
+                <div className="flex flex-col gap-2 mt-2 w-full">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileService
+                        .descargarArchivo({
+                          nombre: archivo.nombre,
+                          extension: archivo.extension,
+                          path: currentPath,
+                        })
+                        .catch((err) => {
+                          alert(err.message || "Error al descargar");
+                          console.error(err);
+                        });
+                    }}
+                  >
+                    Descargar
+                  </Button>
 
-      const res = await fileService.eliminarArchivo({
-        nombre: archivo.nombre,
-        extension: archivo.extension,
-        path: currentPath,
-      });
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const confirmar = window.confirm("¿Eliminar este archivo?");
+                      if (!confirmar) return;
 
-      if (res.success) {
-        setArchivos((prev) =>
-          prev.filter(
-            (a) =>
-              !(a.nombre === archivo.nombre && a.extension === archivo.extension)
-          )
-        );
-      } else {
-        alert(res.message || "No se pudo eliminar");
-      }
-    }}
-  >
-    Eliminar
-  </Button>
-</FolderCard>
+                      const res = await fileService.eliminarArchivo({
+                        nombre: archivo.nombre,
+                        extension: archivo.extension,
+                        path: currentPath,
+                      });
+
+                      if (res.success) {
+                        setArchivos((prev) =>
+                          prev.filter(
+                            (a) =>
+                              !(a.nombre === archivo.nombre && a.extension === archivo.extension)
+                          )
+                        );
+                      } else {
+                        alert(res.message || "Error al eliminar archivo");
+                      }
+                    }}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              </FolderCard>
               ))
             ) : (
               <div className="col-span-full text-center py-12">
