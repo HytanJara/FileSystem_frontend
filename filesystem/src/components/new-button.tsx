@@ -3,6 +3,10 @@
 import { Plus, Folder, Upload, FileText, Sheet, Presentation } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { uploadService } from "@/api/upload/uploadService"
+import { crearCarpeta } from "@/api/carpeta/folder"
+import { authService } from "@/api/login/auth";
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +16,28 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function NewButton() {
-  const handleCreateFolder = () => {
+
+  
+  const handleCreateFolder = async () => {
     console.log("Create folder clicked")
-    // Abrir modal para crear carpeta
+    const user = authService.getUserData();
+  if (!user) {
+    alert("❌ Debes iniciar sesión para crear una carpeta");
+    return;
+  }
+
+  const nombre = prompt("Nombre de la nueva carpeta:");
+  if (!nombre) return;
+
+  const path = "root"; // Puedes mejorar esto para usar la ruta actual si la manejas
+  const res = await crearCarpeta(user.nombre, path, nombre);
+
+  if (res.success) {
+    alert(`✅ Carpeta "${nombre}" creada con éxito`);
+    window.location.reload(); // O actualizar estado si usas useState
+  } else {
+    alert(`❌ Error al crear carpeta: ${res.message}`);
+  }
   }
 
   const handleUploadFile = () => {
@@ -29,7 +52,6 @@ export function NewButton() {
           const result = await uploadService.uploadFile(file, "root");
           if (result.success) {
             alert(`✅ ${file.name} subido con éxito`);
-            window.dispatchEvent(new Event("archivosActualizados"));
           } else {
             alert(`❌ Error al subir ${file.name}: ${result.message}`);
           }
@@ -39,6 +61,9 @@ export function NewButton() {
   
     input.click();
   };
+
+
+  
   
 
   const handleUploadFolder = () => {
@@ -72,6 +97,7 @@ export function NewButton() {
         break
     }
   }
+  
 
   return (
     <DropdownMenu>

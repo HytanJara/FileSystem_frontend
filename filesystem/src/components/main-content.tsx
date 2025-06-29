@@ -5,28 +5,47 @@ import { FolderCard } from "@/components/folder-card"
 import { Button } from "@/components/ui/button"
 import { List, Info, Settings, HardDrive } from "lucide-react"
 import { fileService } from "@/api/upload/fileServices"
+import { crearCarpeta } from "@/api/carpeta/folder"
+import { authService } from "@/api/login/auth";
+import { listarCarpetas } from "@/api/carpeta/folder"
+
+
 
 interface Archivo {
   nombre: string;
   extension: string;
 }
 
+
+interface Carpeta {
+  nombre: string
+}
+
 export function MainContent() {
   const [archivos, setArchivos] = useState<Archivo[]>([])
+  const [carpetas, setCarpetas] = useState<Carpeta[]>([])
 
   useEffect(() => {
-    const cargarArchivos = async () => {
+    const cargarContenido = async () => {
       try {
-        const data = await fileService.listarArchivos()
-        setArchivos(data)
+        const user = authService.getUserData()
+        if (!user) return
+
+        const archivosData = await fileService.listarArchivos()
+        const carpetasData = await listarCarpetas(user.nombre, "root")
+
+
+        setArchivos(archivosData)
+        setCarpetas(carpetasData)
       } catch (error) {
-        console.error("Error al cargar archivos:", error)
+        console.error("Error al cargar contenido:", error)
       }
     }
 
-    cargarArchivos()
+    cargarContenido()
   }, [])
 
+  
   return (
     <main className="flex-1 bg-gray-50">
       <div className="flex items-center justify-end px-6 py-3 bg-white border-b border-gray-200">
@@ -52,13 +71,24 @@ export function MainContent() {
           <p className="text-gray-600">Todos tus archivos y carpetas</p>
         </div>
 
+        {carpetas.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-sm font-medium text-gray-700 mb-4">Carpetas</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {carpetas.map((carpeta, index) => (
+                <FolderCard key={`folder-${index}`} name={carpeta.nombre} />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           <h2 className="text-sm font-medium text-gray-700 mb-4">Archivos</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {archivos.length > 0 ? (
               archivos.map((archivo, index) => (
                 <FolderCard
-                  key={index}
+                  key={`file-${index}`}
                   name={`${archivo.nombre}.${archivo.extension}`}
                 />
               ))
