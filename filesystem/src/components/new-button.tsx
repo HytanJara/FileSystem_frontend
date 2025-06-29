@@ -2,6 +2,7 @@
 
 import { Plus, Folder, Upload, FileText, Sheet, Presentation } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { uploadService } from "@/api/upload/uploadService"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,20 +18,28 @@ export function NewButton() {
   }
 
   const handleUploadFile = () => {
-    console.log("Upload file clicked")
-    // Abrir selector de archivos
-    const input = document.createElement("input")
-    input.type = "file"
-    input.multiple = true
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+  
+    input.onchange = async (e) => {
+      const files = (e.target as HTMLInputElement).files;
       if (files) {
-        console.log("Files selected:", Array.from(files))
-        // Procesar archivos subidos
+        for (const file of Array.from(files)) {
+          const result = await uploadService.uploadFile(file, "root");
+          if (result.success) {
+            alert(`✅ ${file.name} subido con éxito`);
+            window.dispatchEvent(new Event("archivosActualizados"));
+          } else {
+            alert(`❌ Error al subir ${file.name}: ${result.message}`);
+          }
+        }
       }
-    }
-    input.click()
-  }
+    };
+  
+    input.click();
+  };
+  
 
   const handleUploadFolder = () => {
     console.log("Upload folder clicked")

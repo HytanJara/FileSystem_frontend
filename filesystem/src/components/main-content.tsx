@@ -1,9 +1,31 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { FolderCard } from "@/components/folder-card"
 import { Button } from "@/components/ui/button"
 import { List, Info, Settings, HardDrive } from "lucide-react"
+import { fileService } from "@/api/upload/fileServices"
+
+interface Archivo {
+  nombre: string;
+  extension: string;
+}
 
 export function MainContent() {
-  const folders: { id: string; name: string }[] = []
+  const [archivos, setArchivos] = useState<Archivo[]>([])
+
+  useEffect(() => {
+    const cargarArchivos = async () => {
+      try {
+        const data = await fileService.listarArchivos()
+        setArchivos(data)
+      } catch (error) {
+        console.error("Error al cargar archivos:", error)
+      }
+    }
+
+    cargarArchivos()
+  }, [])
 
   return (
     <main className="flex-1 bg-gray-50">
@@ -33,9 +55,12 @@ export function MainContent() {
         <div className="mb-4">
           <h2 className="text-sm font-medium text-gray-700 mb-4">Archivos</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {folders.length > 0 ? (
-              folders.map((folder) => (
-                <FolderCard key={folder.id} name={folder.name} />
+            {archivos.length > 0 ? (
+              archivos.map((archivo, index) => (
+                <FolderCard
+                  key={index}
+                  name={`${archivo.nombre}.${archivo.extension}`}
+                />
               ))
             ) : (
               <div className="col-span-full text-center py-12">

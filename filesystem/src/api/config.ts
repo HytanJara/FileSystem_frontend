@@ -6,6 +6,7 @@ export const API_CONFIG = {
   ENDPOINTS: {
     LOGIN: '/usuarios/login',
     REGISTER: '/usuarios',
+    ARCHIVOS: '/usuarios/{nombre}/archivos',
     // Add more endpoints as needed
   }
 };
