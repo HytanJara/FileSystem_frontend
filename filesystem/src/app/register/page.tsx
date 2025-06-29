@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { registerService } from "@/api/register/auth";
+import { authService } from "@/api/login/auth";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
@@ -9,6 +10,13 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    // Si ya está logueado, redirigir al main page
+    if (authService.isLoggedIn()) {
+      router.push("/");
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,9 +50,12 @@ export default function RegisterPage() {
       if (result.success && result.user) {
         console.log("Usuario registrado:", result.user);
         
-        // Mostrar mensaje de éxito y redirigir
+        // Guardar datos del usuario automáticamente después del registro
+        registerService.saveUserData(result.user);
+        
+        // Mostrar mensaje de éxito y redirigir al main page
         alert(`¡Usuario ${result.user.nombre} registrado exitosamente!`);
-        router.push("/login");
+        router.push("/"); // Navegar al main page
       } else {
         setError(result.message || "Error al registrar usuario");
       }

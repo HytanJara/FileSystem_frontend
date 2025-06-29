@@ -89,5 +89,9 @@ export const registerService = {
         message: `Error de conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`
       };
     }
+  },
+
+  saveUserData(user: User): void {
+    localStorage.setItem("usuario", JSON.stringify(user));
   }
 };

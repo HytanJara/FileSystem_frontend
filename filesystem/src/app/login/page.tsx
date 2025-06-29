@@ -1,11 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authService } from "@/api/login/auth";
+import { useRouter } from "next/navigation";
 
-export default function HomePage() {
+export default function LoginPage() {
   const [nombre, setNombre] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    // Si ya está logueado, redirigir al main page
+    if (authService.isLoggedIn()) {
+      router.push("/");
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,9 +36,9 @@ export default function HomePage() {
         // Guardar datos del usuario
         authService.saveUserData(result.user);
         
-        // Redirigir al dashboard
+        // Redirigir al main page
         alert(`¡Bienvenido ${result.user.nombre}!`);
-        // router.push("/dashboard");
+        router.push("/"); // Navegar al main page
       } else {
         setError(result.message || "Error al iniciar sesión");
       }
