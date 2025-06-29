@@ -5,7 +5,7 @@ export const API_CONFIG = {
   BASE_URL: API_BASE_URL,
   ENDPOINTS: {
     LOGIN: '/usuarios/login',
-    REGISTER: '/usuario/registro',
+    REGISTER: '/usuarios',
     // Add more endpoints as needed
   }
 };
