@@ -293,6 +293,34 @@ export const fileService = {
   return { success: false, message: data?.error || "Error al modificar archivo" };
 },
 
+async crearArchivo({
+  path,
+  nombre,
+  extension,
+  contenido,
+}: {
+  path: string;
+  nombre: string;
+  extension: string;
+  contenido: string;
+}): Promise<{ success: boolean; message?: string }> {
+  const usuario = authService.getUserData();
+  if (!usuario) return { success: false, message: "Usuario no autenticado" };
+
+  const url = getApiUrl(`/usuarios/${usuario.nombre}/archivos`);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, nombre, extension, contenido }),
+  });
+
+  if (res.ok) return { success: true };
+
+  const data = await res.json();
+  return { success: false, message: data?.error || "Error al crear archivo" };
+},
+
 };
 
 

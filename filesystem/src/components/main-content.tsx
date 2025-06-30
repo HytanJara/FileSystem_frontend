@@ -69,7 +69,13 @@ export function MainContent() {
             </Button>
           )}
         </div>
-        <NewButton currentPath={currentPath} />
+        <NewButton 
+          currentPath={currentPath}
+          onArchivoCreado={() => {
+            // Recargar archivos tras crear uno nuevo
+            fileService.listarArchivos(currentPath).then(setArchivos)
+          }} />
+        
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" className="text-gray-600">
             <List className="h-5 w-5" />

@@ -7,6 +7,18 @@ import { cn } from "@/lib/utils"
 import { useNavigation } from "@/contexts/navigation-context"
 import { authService } from "@/api/login/auth"
 import { useRouter } from "next/navigation"
+import { fileService } from "@/api/upload/fileServices"
+import { useState } from "react"
+
+
+interface Archivo {
+  nombre: string
+  extension: string
+  contenido: string
+  fechaCreacion: string
+  fechaModificacion: string
+  tamano: number
+}
 
 const sidebarItems = [
   { id: "my-drive" as const, icon: HardDrive, label: "My Drive" },
@@ -16,6 +28,7 @@ const sidebarItems = [
 
 export function Sidebar() {
   const { currentView, setCurrentView } = useNavigation()
+  const [archivos, setArchivos] = useState<Archivo[]>([])
   const router = useRouter()
 
   const handleLogout = () => {
@@ -28,7 +41,12 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen relative">
       <div className="p-4">
-        <NewButton />
+        <NewButton 
+        currentPath={currentView}
+                  onArchivoCreado={() => {
+                    // Recargar archivos tras crear uno nuevo
+                    fileService.listarArchivos(currentView).then(setArchivos)
+                  }} />
       </div>
 
       <nav className="px-2">

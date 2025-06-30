@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { uploadService } from "@/api/upload/uploadService"
 import { crearCarpeta } from "@/api/carpeta/folder"
 import { authService } from "@/api/login/auth";
+import { CrearArchivoModal } from "@/components/CrearArchivoModal"
+
 
 
 import {
@@ -15,8 +17,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { fileService } from "@/api/upload/fileServices"
+import { useState } from "react"
 
-export function NewButton({ currentPath }: { currentPath: string }) {
+export function NewButton({ currentPath, onArchivoCreado }: { currentPath: string; onArchivoCreado?: () => void }) {
+
 
   
   const handleCreateFolder = async () => {
@@ -115,9 +119,13 @@ export function NewButton({ currentPath }: { currentPath: string }) {
         break
     }
   }
+
+  const [showCrearArchivo, setShowCrearArchivo] = useState(false)
+
   
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-2 font-medium">
@@ -139,6 +147,10 @@ export function NewButton({ currentPath }: { currentPath: string }) {
           <Upload className="mr-2 h-4 w-4" />
           Subir carpeta
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setShowCrearArchivo(true)}>
+          <FileText className="mr-2 h-4 w-4" />
+          Crear archivo
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => handleCreateDocument("docs")}>
           <FileText className="mr-2 h-4 w-4" />
@@ -154,5 +166,13 @@ export function NewButton({ currentPath }: { currentPath: string }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+      {/* Modal fuera del menú */}
+      <CrearArchivoModal
+        open={showCrearArchivo}
+        onClose={() => setShowCrearArchivo(false)}
+        currentPath={currentPath}
+        onArchivoCreado={onArchivoCreado}
+      />
+    </>
   )
 }
