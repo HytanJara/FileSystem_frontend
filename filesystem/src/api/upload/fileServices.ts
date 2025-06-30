@@ -238,6 +238,29 @@ export const fileService = {
   return { success: false, message: data?.error || "Error al compartir archivo" };
   },
 
+
+  async eliminarCarpeta({
+    path,
+  }: {
+    path: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    const usuario = authService.getUserData();
+    if (!usuario) return { success: false, message: "Usuario no autenticado" };
+  
+    const url = getApiUrl(`/carpetas/${usuario.nombre}`);
+  
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path }),
+    });
+  
+    if (res.ok) return { success: true };
+  
+    const data = await res.json();
+    return { success: false, message: data?.error || "Error al eliminar la carpeta" };
+  }
+
 };
 
 

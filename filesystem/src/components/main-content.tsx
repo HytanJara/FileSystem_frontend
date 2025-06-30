@@ -163,6 +163,31 @@ export function MainContent() {
                         Compartir
                       </Button>
 
+                      {/* Botón Eliminar */}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="w-24 text-xs"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const confirmar = confirm(`¿Eliminar la carpeta "${carpeta.nombre}"?`);
+                          if (!confirmar) return;
+
+                          const res = await fileService.eliminarCarpeta({
+                            path: `${currentPath}/${carpeta.nombre}`,
+                          });
+
+                          if (res.success) {
+                            setCarpetas(prev => prev.filter(c => c.nombre !== carpeta.nombre));
+                            alert("Carpeta eliminada correctamente");
+                          } else {
+                            alert(res.message || "Error al eliminar carpeta");
+                          }
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+
                     </div>
                   </FolderCard>
                 ))}
