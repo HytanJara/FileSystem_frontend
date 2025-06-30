@@ -259,7 +259,39 @@ export const fileService = {
   
     const data = await res.json();
     return { success: false, message: data?.error || "Error al eliminar la carpeta" };
-  }
+  },
+
+  async modificarArchivo({
+  nombre,
+  extension,
+  path,
+  nuevoContenido,
+}: {
+  nombre: string;
+  extension: string;
+  path: string;
+  nuevoContenido: string;
+}): Promise<{ success: boolean; message?: string }> {
+  const usuario = authService.getUserData();
+  if (!usuario) return { success: false, message: "Usuario no autenticado" };
+
+  const url = getApiUrl(`/usuarios/${usuario.nombre}/archivos/modificar`);
+
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      path,
+      nombreArchivo: `${nombre}.${extension}`,
+      nuevoContenido,
+    }),
+  });
+
+  if (res.ok) return { success: true };
+
+  const data = await res.json();
+  return { success: false, message: data?.error || "Error al modificar archivo" };
+},
 
 };
 

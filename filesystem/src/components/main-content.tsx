@@ -5,20 +5,18 @@ import { FolderCard } from "@/components/folder-card"
 import { Button } from "@/components/ui/button"
 import { List, Info, Settings, HardDrive, ArrowLeft } from "lucide-react"
 import { fileService } from "@/api/upload/fileServices"
-import { crearCarpeta } from "@/api/carpeta/folder"
+import { crearCarpeta, compartirCarpeta, listarCarpetas } from "@/api/carpeta/folder"
 import { authService } from "@/api/login/auth";
-import { listarCarpetas } from "@/api/carpeta/folder"
 import { NewButton } from "@/components/new-button"
-import { compartirCarpeta } from "@/api/carpeta/folder";
-
-
-
 
 interface Archivo {
-  nombre: string;
-  extension: string;
+  nombre: string
+  extension: string
+  contenido: string
+  fechaCreacion: string
+  fechaModificacion: string
+  tamano: number
 }
-
 
 interface Carpeta {
   nombre: string
@@ -28,23 +26,24 @@ export function MainContent() {
   const [archivos, setArchivos] = useState<Archivo[]>([])
   const [carpetas, setCarpetas] = useState<Carpeta[]>([])
   const [currentPath, setCurrentPath] = useState<string>("root")
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<Archivo | null>(null)
 
   useEffect(() => {
     const cargarContenido = async () => {
       try {
         const user = authService.getUserData()
         if (!user) return
-  
-        const archivosData = await fileService.listarArchivos(currentPath) // ← importante
+
+        const archivosData = await fileService.listarArchivos(currentPath)
         const carpetasData = await listarCarpetas(user.nombre, currentPath)
-  
+
         setArchivos(archivosData)
         setCarpetas(carpetasData)
       } catch (error) {
         console.error("Error al cargar contenido:", error)
       }
     }
-  
+
     cargarContenido()
   }, [currentPath])
 
@@ -59,7 +58,6 @@ export function MainContent() {
     setCurrentPath(partes.join("/") || "root")
   }
 
-  
   return (
     <main className="flex-1 bg-gray-50">
       <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
@@ -94,107 +92,92 @@ export function MainContent() {
           <p className="text-gray-600">Ruta actual: {currentPath}</p>
         </div>
 
-        
         {carpetas.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-sm font-medium text-gray-700 mb-4">Carpetas</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {carpetas.map((carpeta, index) => (
-                  <FolderCard
-                    key={`folder-${index}`}
-                    name={carpeta.nombre}
-                    type="folder"
-                    onClick={() => handleAbrirCarpeta(carpeta.nombre)}
-                  >
-                    <div className="flex justify-center mt-2 w-full">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="w-24 text-xs"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const destino = prompt("¿A qué carpeta deseas mover esta carpeta?");
-                          if (!destino) return;
+          <div className="mb-4">
+            <h2 className="text-sm font-medium text-gray-700 mb-4">Carpetas</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {carpetas.map((carpeta, index) => (
+                <FolderCard
+                  key={`folder-${index}`}
+                  name={carpeta.nombre}
+                  type="folder"
+                  onClick={() => handleAbrirCarpeta(carpeta.nombre)}
+                >
+                  <div className="flex justify-center mt-2 w-full gap-1 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="text-xs"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const destino = prompt("¿A qué carpeta deseas mover esta carpeta?")
+                        if (!destino) return
 
-                          const res = await fileService.moverCarpeta({
-                            origenPath: `${currentPath}/${carpeta.nombre}`,
-                            destinoPath: destino,
-                          });
+                        const res = await fileService.moverCarpeta({
+                          origenPath: `${currentPath}/${carpeta.nombre}`,
+                          destinoPath: destino,
+                        })
+                        if (res.success) {
+                          setCarpetas((prev) => prev.filter((c) => c.nombre !== carpeta.nombre))
+                          alert("Carpeta movida con éxito")
+                        } else {
+                          alert(res.message || "Error al mover carpeta")
+                        }
+                      }}
+                    >
+                      Mover
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const destinatario = prompt("¿A qué usuario deseas compartir esta carpeta?")
+                        if (!destinatario) return
 
-                          if (res.success) {
-                            setCarpetas(prev => prev.filter(c => c.nombre !== carpeta.nombre));
-                            alert("Carpeta movida con éxito");
-                          } else {
-                            alert(res.message || "Error al mover carpeta");
-                          }
-                        }}
-                      >
-                        Mover
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-24 text-xs"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-
-                          const destinatario = prompt("¿A qué usuario deseas compartir esta carpeta?");
-                          if (!destinatario) return;
-
-                          const user = authService.getUserData();
-                          if (!user) {
-                            alert("Usuario no autenticado");
-                            return;
-                          }
-
-                          const res = await compartirCarpeta(
-                            user.nombre,
-                            `${currentPath}/${carpeta.nombre}`,
-                            destinatario
-                          );
-
-                          if (res.success) {
-                            alert(`Carpeta compartida con éxito con ${destinatario}`);
-                          } else {
-                            alert(res.message || "Error al compartir carpeta");
-                          }
-                        }}
-                      >
-                        Compartir
-                      </Button>
-
-                      {/* Botón Eliminar */}
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="w-24 text-xs"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const confirmar = confirm(`¿Eliminar la carpeta "${carpeta.nombre}"?`);
-                          if (!confirmar) return;
-
-                          const res = await fileService.eliminarCarpeta({
-                            path: `${currentPath}/${carpeta.nombre}`,
-                          });
-
-                          if (res.success) {
-                            setCarpetas(prev => prev.filter(c => c.nombre !== carpeta.nombre));
-                            alert("Carpeta eliminada correctamente");
-                          } else {
-                            alert(res.message || "Error al eliminar carpeta");
-                          }
-                        }}
-                      >
-                        Eliminar
-                      </Button>
-
-                    </div>
-                  </FolderCard>
-                ))}
-              </div>
+                        const user = authService.getUserData()
+                        if (!user) {
+                          alert("Usuario no autenticado")
+                          return
+                        }
+                        const res = await compartirCarpeta(user.nombre, `${currentPath}/${carpeta.nombre}`, destinatario)
+                        if (res.success) {
+                          alert(`Carpeta compartida con éxito con ${destinatario}`)
+                        } else {
+                          alert(res.message || "Error al compartir carpeta")
+                        }
+                      }}
+                    >
+                      Compartir
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="text-xs"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const confirmar = confirm(`¿Eliminar la carpeta "${carpeta.nombre}"?`)
+                        if (!confirmar) return
+                        const res = await fileService.eliminarCarpeta({
+                          path: `${currentPath}/${carpeta.nombre}`,
+                        })
+                        if (res.success) {
+                          setCarpetas((prev) => prev.filter((c) => c.nombre !== carpeta.nombre))
+                          alert("Carpeta eliminada correctamente")
+                        } else {
+                          alert(res.message || "Error al eliminar carpeta")
+                        }
+                      }}
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
+                </FolderCard>
+              ))}
             </div>
-          )}
-
+          </div>
+        )}
 
         <div className="mb-4">
           <h2 className="text-sm font-medium text-gray-700 mb-4">Archivos</h2>
@@ -202,138 +185,171 @@ export function MainContent() {
             {archivos.length > 0 ? (
               archivos.map((archivo, index) => (
                 <FolderCard
-                key={`file-${index}`}
-                name={`${archivo.nombre}.${archivo.extension}`}
-                type="file"
-              >
-                <div className="flex flex-col gap-2 mt-2 w-full">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileService
-                        .descargarArchivo({
+                  key={`file-${index}`}
+                  name={`${archivo.nombre}.${archivo.extension}`}
+                  type="file"
+                >
+                  <div className="flex flex-col gap-2 mt-2 w-full">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        fileService.descargarArchivo({
+                          nombre: archivo.nombre,
+                          extension: archivo.extension,
+                          path: currentPath,
+                        }).catch((err) => {
+                          alert(err.message || "Error al descargar")
+                          console.error(err)
+                        })
+                      }}
+                    >
+                      Descargar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const confirmar = confirm("¿Eliminar este archivo?")
+                        if (!confirmar) return
+                        const res = await fileService.eliminarArchivo({
                           nombre: archivo.nombre,
                           extension: archivo.extension,
                           path: currentPath,
                         })
-                        .catch((err) => {
-                          alert(err.message || "Error al descargar");
-                          console.error(err);
-                        });
-                    }}
-                  >
-                    Descargar
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      const confirmar = window.confirm("¿Eliminar este archivo?");
-                      if (!confirmar) return;
-
-                      const res = await fileService.eliminarArchivo({
-                        nombre: archivo.nombre,
-                        extension: archivo.extension,
-                        path: currentPath,
-                      });
-
-                      if (res.success) {
-                        setArchivos((prev) =>
-                          prev.filter(
-                            (a) =>
+                        if (res.success) {
+                          setArchivos((prev) =>
+                            prev.filter((a) =>
                               !(a.nombre === archivo.nombre && a.extension === archivo.extension)
+                            )
                           )
-                        );
-                      } else {
-                        alert(res.message || "Error al eliminar archivo");
-                      }
-                    }}
-                  >
-                    Eliminar
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-
-                      const destino = prompt("¿A qué carpeta deseas copiarlo? (ej: root/fotos)");
-                      if (!destino) return;
-
-                      const res = await fileService.copiarArchivo({
-                        origenPath: currentPath,
-                        destinoPath: destino,
-                        nombre: archivo.nombre,
-                        extension: archivo.extension,
-                      });
-
-                      if (res.success) {
-                        alert("Archivo copiado correctamente.");
-                      } else {
-                        alert(res.message || "Error al copiar el archivo");
-                      }
-                    }}
+                        } else {
+                          alert(res.message || "Error al eliminar archivo")
+                        }
+                      }}
                     >
-                    Copiar
+                      Eliminar
                     </Button>
-
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={async (e) => {
-                        e.stopPropagation();
-                        const destino = prompt("¿A qué carpeta deseas moverlo? (ej: root/nueva)");
-                        if (!destino) return;
-
+                        e.stopPropagation()
+                        const destino = prompt("¿A qué carpeta deseas copiarlo?")
+                        if (!destino) return
+                        const res = await fileService.copiarArchivo({
+                          origenPath: currentPath,
+                          destinoPath: destino,
+                          nombre: archivo.nombre,
+                          extension: archivo.extension,
+                        })
+                        if (res.success) {
+                          alert("Archivo copiado correctamente")
+                        } else {
+                          alert(res.message || "Error al copiar")
+                        }
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const destino = prompt("¿A qué carpeta deseas moverlo?")
+                        if (!destino) return
                         const res = await fileService.moverArchivo({
                           origenPath: currentPath,
                           destinoPath: destino,
                           nombre: archivo.nombre,
                           extension: archivo.extension,
-                        });
-
+                        })
                         if (res.success) {
-                          setArchivos(prev => prev.filter(a => !(a.nombre === archivo.nombre && a.extension === archivo.extension)));
-                          alert("Archivo movido con éxito");
+                          setArchivos((prev) =>
+                            prev.filter((a) =>
+                              !(a.nombre === archivo.nombre && a.extension === archivo.extension)
+                            )
+                          )
+                          alert("Archivo movido correctamente")
                         } else {
-                          alert(res.message);
+                          alert(res.message || "Error al mover")
                         }
                       }}
-                      >
+                    >
                       Mover
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={async (e) => {
-                        e.stopPropagation();
-                        const destinatario = prompt("¿A qué usuario deseas compartir este archivo?");
-                        if (!destinatario) return;
-
+                        e.stopPropagation()
+                        const destinatario = prompt("¿A qué usuario deseas compartir este archivo?")
+                        if (!destinatario) return
                         const res = await fileService.compartirArchivo({
                           nombre: archivo.nombre,
                           extension: archivo.extension,
                           path: currentPath,
                           destinatario,
-                        });
-
+                        })
                         if (res.success) {
-                          alert(`Archivo compartido correctamente con ${destinatario}`);
+                          alert("Archivo compartido correctamente")
                         } else {
-                          alert(res.message || "Error al compartir");
+                          alert(res.message || "Error al compartir")
                         }
                       }}
                     >
                       Compartir
                     </Button>
-
-                </div>
-              </FolderCard>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            try {
+                              const nuevosDatos = await fileService.listarArchivos(currentPath)
+                              const archivoActualizado = nuevosDatos.find(
+                                (a) => a.nombre === archivo.nombre && a.extension === archivo.extension
+                              )
+                              if (archivoActualizado) {
+                                setArchivoSeleccionado(archivoActualizado)
+                              } else {
+                                alert("Archivo no encontrado al refrescar detalles.")
+                              }
+                            } catch (error) {
+                              console.error(error)
+                              alert("Error al refrescar detalles del archivo")
+                            }
+                          }}
+                        >
+                          Ver detalles
+                        </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const nuevo = prompt("Nuevo contenido para este archivo:")
+                        if (!nuevo) return
+                        const res = await fileService.modificarArchivo({
+                          nombre: archivo.nombre,
+                          extension: archivo.extension,
+                          path: currentPath,
+                          nuevoContenido: nuevo,
+                        })
+                        if (res.success) {
+                          alert("Archivo modificado correctamente")
+                        } else {
+                          alert(res.message || "Error al modificar archivo")
+                        }
+                      }}
+                    >
+                      Modificar
+                    </Button>
+                  </div>
+                </FolderCard>
               ))
             ) : (
               <div className="col-span-full text-center py-12">
@@ -341,14 +357,35 @@ export function MainContent() {
                 <h3 className="text-lg font-medium text-gray-600 mb-2">
                   Esta carpeta está vacía
                 </h3>
-                <p className="text-gray-500">
-                  Usa el botón "Nuevo" para crear archivos y carpetas
-                </p>
+                <p className="text-gray-500">Usa el botón "Nuevo" para crear archivos y carpetas</p>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Modal detalles archivo */}
+      {archivoSeleccionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white rounded p-4 shadow max-w-md w-full">
+            <h2 className="text-lg font-bold mb-2">Detalles del archivo</h2>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li><strong>Nombre:</strong> {archivoSeleccionado.nombre}.{archivoSeleccionado.extension}</li>
+              <li><strong>Tamaño:</strong> {archivoSeleccionado.tamano} bytes</li>
+              <li><strong>Creado:</strong> {archivoSeleccionado.fechaCreacion}</li>
+              <li><strong>Modificado:</strong> {archivoSeleccionado.fechaModificacion}</li>
+              <li><strong>Contenido:</strong>
+                <pre className="bg-gray-100 rounded p-2 mt-1 whitespace-pre-wrap break-words">
+                  {archivoSeleccionado.contenido}
+                </pre>
+              </li>
+            </ul>
+            <Button className="mt-4" onClick={() => setArchivoSeleccionado(null)}>
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
