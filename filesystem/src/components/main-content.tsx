@@ -167,6 +167,32 @@ export function MainContent() {
                   >
                     Eliminar
                   </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+
+                      const destino = prompt("¿A qué carpeta deseas copiarlo? (ej: root/fotos)");
+                      if (!destino) return;
+
+                      const res = await fileService.copiarArchivo({
+                        origenPath: currentPath,
+                        destinoPath: destino,
+                        nombre: archivo.nombre,
+                        extension: archivo.extension,
+                      });
+
+                      if (res.success) {
+                        alert("Archivo copiado correctamente.");
+                      } else {
+                        alert(res.message || "Error al copiar el archivo");
+                      }
+                    }}
+                  >
+                    Copiar
+                  </Button>
                 </div>
               </FolderCard>
               ))
