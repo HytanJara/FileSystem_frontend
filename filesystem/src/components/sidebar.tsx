@@ -23,7 +23,7 @@ interface Archivo {
 const sidebarItems = [
   { id: "my-drive" as const, icon: HardDrive, label: "My Drive" },
   { id: "shared" as const, icon: Users, label: "Shared with me" },
-  { id: "trash" as const, icon: Trash2, label: "Trash" },
+  
 ]
 
 export function Sidebar() {

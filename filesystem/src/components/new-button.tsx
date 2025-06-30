@@ -27,7 +27,7 @@ export function NewButton({ currentPath, onArchivoCreado }: { currentPath: strin
     console.log("Create folder clicked")
     const user = authService.getUserData();
   if (!user) {
-    alert("❌ Debes iniciar sesión para crear una carpeta");
+    alert(" Debes iniciar sesión para crear una carpeta");
     return;
   }
 
@@ -38,10 +38,10 @@ export function NewButton({ currentPath, onArchivoCreado }: { currentPath: strin
   const res = await crearCarpeta(user.nombre, path, nombre);
 
   if (res.success) {
-    alert(`✅ Carpeta "${nombre}" creada con éxito`);
+    alert(`Carpeta "${nombre}" creada con éxito`);
     window.location.reload(); // O actualizar estado si usas useState
   } else {
-    alert(`❌ Error al crear carpeta: ${res.message}`);
+    alert(` Error al crear carpeta: ${res.message}`);
   }
   }
 
@@ -69,13 +69,13 @@ export function NewButton({ currentPath, onArchivoCreado }: { currentPath: strin
           });
   
           if (res.success) {
-            alert(`✅ Archivo "${file.name}" subido correctamente`)
+            alert(` Archivo "${file.name}" subido correctamente`)
             window.location.reload() // O usa un callback para refrescar estado
           } else {
-            alert(`❌ Error al subir archivo: ${res.message}`)
+            alert(` Error al subir archivo: ${res.message}`)
           }
         } catch (error) {
-          alert(`❌ Error al subir archivo`)
+          alert(` Error al subir archivo`)
           console.error(error)
         }
       }
