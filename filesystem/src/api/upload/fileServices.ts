@@ -149,7 +149,60 @@ export const fileService = {
   
     const data = await res.json();
     return { success: false, message: data?.error || "Error al copiar archivo" };
-  }
+  },
+
+  async moverArchivo({
+    origenPath,
+    destinoPath,
+    nombre,
+    extension,
+  }: {
+    origenPath: string
+    destinoPath: string
+    nombre: string
+    extension: string
+  }): Promise<{ success: boolean; message?: string }> {
+    const usuario = authService.getUserData();
+    if (!usuario) return { success: false, message: "Usuario no autenticado" };
+  
+    const url = getApiUrl(`/usuarios/${usuario.nombre}/archivos/mover`);
+  
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ origenPath, destinoPath, nombre, extension }),
+    });
+  
+    if (res.ok) return { success: true };
+  
+    const data = await res.json();
+    return { success: false, message: data?.error || "Error al mover archivo" };
+  },
+  
+  // Mover carpeta
+  async moverCarpeta({
+    origenPath,
+    destinoPath,
+  }: {
+    origenPath: string
+    destinoPath: string
+  }): Promise<{ success: boolean; message?: string }> {
+    const usuario = authService.getUserData();
+    if (!usuario) return { success: false, message: "Usuario no autenticado" };
+  
+    const url = getApiUrl(`/carpetas/${usuario.nombre}/mover`);
+  
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ origenPath, destinoPath }),
+    });
+  
+    if (res.ok) return { success: true };
+  
+    const data = await res.json();
+    return { success: false, message: data?.error || "Error al mover carpeta" };
+  },
 };
 
 

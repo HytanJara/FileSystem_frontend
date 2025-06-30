@@ -92,21 +92,50 @@ export function MainContent() {
           <p className="text-gray-600">Ruta actual: {currentPath}</p>
         </div>
 
+        
         {carpetas.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-sm font-medium text-gray-700 mb-4">Carpetas</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {carpetas.map((carpeta, index) => (
-                <FolderCard
-                  key={`folder-${index}`}
-                  name={carpeta.nombre}
-                  type="folder"
-                  onClick={() => handleAbrirCarpeta(carpeta.nombre)}
-                />
-              ))}
+            <div className="mb-4">
+              <h2 className="text-sm font-medium text-gray-700 mb-4">Carpetas</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {carpetas.map((carpeta, index) => (
+                  <FolderCard
+                    key={`folder-${index}`}
+                    name={carpeta.nombre}
+                    type="folder"
+                    onClick={() => handleAbrirCarpeta(carpeta.nombre)}
+                  >
+                    <div className="flex justify-center mt-2 w-full">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="w-24 text-xs"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const destino = prompt("¿A qué carpeta deseas mover esta carpeta?");
+                          if (!destino) return;
+
+                          const res = await fileService.moverCarpeta({
+                            origenPath: `${currentPath}/${carpeta.nombre}`,
+                            destinoPath: destino,
+                          });
+
+                          if (res.success) {
+                            setCarpetas(prev => prev.filter(c => c.nombre !== carpeta.nombre));
+                            alert("Carpeta movida con éxito");
+                          } else {
+                            alert(res.message || "Error al mover carpeta");
+                          }
+                        }}
+                      >
+                        Mover
+                      </Button>
+                    </div>
+                  </FolderCard>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
 
         <div className="mb-4">
           <h2 className="text-sm font-medium text-gray-700 mb-4">Archivos</h2>
@@ -190,9 +219,36 @@ export function MainContent() {
                         alert(res.message || "Error al copiar el archivo");
                       }
                     }}
-                  >
+                    >
                     Copiar
-                  </Button>
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const destino = prompt("¿A qué carpeta deseas moverlo? (ej: root/nueva)");
+                        if (!destino) return;
+
+                        const res = await fileService.moverArchivo({
+                          origenPath: currentPath,
+                          destinoPath: destino,
+                          nombre: archivo.nombre,
+                          extension: archivo.extension,
+                        });
+
+                        if (res.success) {
+                          setArchivos(prev => prev.filter(a => !(a.nombre === archivo.nombre && a.extension === archivo.extension)));
+                          alert("Archivo movido con éxito");
+                        } else {
+                          alert(res.message);
+                        }
+                      }}
+                      >
+                      Mover
+                    </Button>
+
                 </div>
               </FolderCard>
               ))
