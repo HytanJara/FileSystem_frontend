@@ -43,3 +43,31 @@ export async function listarCarpetas(
 
   return data.subdirectorios // Esto es lo que espera `MainContent`
 }
+
+// Compartir carpeta
+export async function compartirCarpeta(
+  nombreUsuario: string,
+  path: string,
+  destinatario: string
+): Promise<{ success: boolean; message: string }> {
+  const url = getApiUrl(`/carpetas/${nombreUsuario}/compartir`);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path,
+        destinatario,
+      }),
+    });
+
+    if (res.ok) {
+      return { success: true, message: "Carpeta compartida correctamente" };
+    } else {
+      const data = await res.json();
+      return { success: false, message: data?.error || "Error al compartir carpeta" };
+    }
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}

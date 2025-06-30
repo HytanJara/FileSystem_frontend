@@ -203,6 +203,41 @@ export const fileService = {
     const data = await res.json();
     return { success: false, message: data?.error || "Error al mover carpeta" };
   },
+
+  async compartirArchivo({
+  nombre,
+  extension,
+  path,
+  destinatario,
+}: {
+  nombre: string
+  extension: string
+  path: string
+  destinatario: string
+}): Promise<{ success: boolean; message?: string }> {
+  const usuario = authService.getUserData();
+  if (!usuario) return { success: false, message: "Usuario no autenticado" };
+
+  const url = getApiUrl(
+    `/usuarios/${usuario.nombre}/archivos/compartir`
+  );
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      path,
+      nombreArchivo: `${nombre}.${extension}`,
+      destinatario,
+    }),
+  });
+
+  if (res.ok) return { success: true };
+
+  const data = await res.json();
+  return { success: false, message: data?.error || "Error al compartir archivo" };
+  },
+
 };
 
 

@@ -9,6 +9,8 @@ import { crearCarpeta } from "@/api/carpeta/folder"
 import { authService } from "@/api/login/auth";
 import { listarCarpetas } from "@/api/carpeta/folder"
 import { NewButton } from "@/components/new-button"
+import { compartirCarpeta } from "@/api/carpeta/folder";
+
 
 
 
@@ -129,6 +131,38 @@ export function MainContent() {
                       >
                         Mover
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-24 text-xs"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+
+                          const destinatario = prompt("¿A qué usuario deseas compartir esta carpeta?");
+                          if (!destinatario) return;
+
+                          const user = authService.getUserData();
+                          if (!user) {
+                            alert("Usuario no autenticado");
+                            return;
+                          }
+
+                          const res = await compartirCarpeta(
+                            user.nombre,
+                            `${currentPath}/${carpeta.nombre}`,
+                            destinatario
+                          );
+
+                          if (res.success) {
+                            alert(`Carpeta compartida con éxito con ${destinatario}`);
+                          } else {
+                            alert(res.message || "Error al compartir carpeta");
+                          }
+                        }}
+                      >
+                        Compartir
+                      </Button>
+
                     </div>
                   </FolderCard>
                 ))}
@@ -247,6 +281,30 @@ export function MainContent() {
                       }}
                       >
                       Mover
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const destinatario = prompt("¿A qué usuario deseas compartir este archivo?");
+                        if (!destinatario) return;
+
+                        const res = await fileService.compartirArchivo({
+                          nombre: archivo.nombre,
+                          extension: archivo.extension,
+                          path: currentPath,
+                          destinatario,
+                        });
+
+                        if (res.success) {
+                          alert(`Archivo compartido correctamente con ${destinatario}`);
+                        } else {
+                          alert(res.message || "Error al compartir");
+                        }
+                      }}
+                    >
+                      Compartir
                     </Button>
 
                 </div>
